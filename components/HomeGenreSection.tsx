@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MovieCard from "@/components/MovieCard";
-import { FlameIcon, StarIcon, ChevronDownIcon } from "@/components/Icons";
+import { FlameIcon, StarIcon, ChevronDownIcon, FilmIcon } from "@/components/Icons";
 import type { MovieBase } from "@/types/movie";
 
 const GENRES = [
@@ -30,25 +30,44 @@ export default function HomeGenreSection({
   initialTopRated,
 }: HomeGenreSectionProps) {
   const [selectedGenre, setSelectedGenre] = useState("All");
+
+  // State for "All" tab infinite load
+  const [allMovies, setAllMovies] = useState<MovieBase[]>(() => {
+    const seen = new Set<string>();
+    const list: MovieBase[] = [];
+    for (const m of [...initialTrending, ...initialTopRated]) {
+      const id = String(m.id);
+      if (!seen.has(id)) {
+        seen.add(id);
+        list.push(m);
+      }
+    }
+    return list;
+  });
+  const [allPage, setAllPage] = useState(1);
+  const [hasMoreAll, setHasMoreAll] = useState(true);
+
+  // State for specific genre view
   const [genreMovies, setGenreMovies] = useState<MovieBase[]>([]);
-  const [page, setPage] = useState(1);
+  const [genrePage, setGenrePage] = useState(1);
+  const [hasMoreGenre, setHasMoreGenre] = useState(true);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
 
   const cacheRef = useRef<Map<string, MovieBase[]>>(new Map());
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleSelectGenre = async (genre: string) => {
     setSelectedGenre(genre);
-    setPage(1);
-    setHasMore(true);
 
     if (genre === "All") {
-      setGenreMovies([]);
       setIsLoading(false);
       return;
     }
+
+    setGenrePage(1);
+    setHasMoreGenre(true);
 
     const cached = cacheRef.current.get(genre);
     if (cached) {
@@ -73,7 +92,7 @@ export default function HomeGenreSection({
         const results: MovieBase[] = data.results ?? [];
         cacheRef.current.set(genre, results);
         setGenreMovies(results);
-        setHasMore(results.length >= 18);
+        setHasMoreGenre(results.length >= 18);
       } else {
         setGenreMovies([]);
       }
@@ -87,10 +106,43 @@ export default function HomeGenreSection({
     }
   };
 
+  // Load More handler (works for both "All" and specific genres!)
   const handleLoadMore = async () => {
-    if (isLoadingMore || !hasMore || selectedGenre === "All") return;
+    if (isLoadingMore) return;
 
-    const nextPage = page + 1;
+    if (selectedGenre === "All") {
+      if (!hasMoreAll) return;
+      const nextPage = allPage + 1;
+      setIsLoadingMore(true);
+
+      try {
+        const res = await fetch(`/api/genre?name=All&page=${nextPage}`);
+        if (res.ok) {
+          const data = await res.json();
+          const nextResults: MovieBase[] = data.results ?? [];
+          if (nextResults.length === 0) {
+            setHasMoreAll(false);
+          } else {
+            setAllMovies((prev) => {
+              const seen = new Set(prev.map((m) => String(m.id)));
+              const unique = nextResults.filter((m) => !seen.has(String(m.id)));
+              return [...prev, ...unique];
+            });
+            setAllPage(nextPage);
+            if (nextResults.length < 18) setHasMoreAll(false);
+          }
+        }
+      } catch (err) {
+        console.warn("Load more all movies error:", err);
+      } finally {
+        setIsLoadingMore(false);
+      }
+      return;
+    }
+
+    // Load more for specific genre
+    if (!hasMoreGenre) return;
+    const nextPage = genrePage + 1;
     setIsLoadingMore(true);
 
     try {
@@ -99,7 +151,7 @@ export default function HomeGenreSection({
         const data = await res.json();
         const nextResults: MovieBase[] = data.results ?? [];
         if (nextResults.length === 0) {
-          setHasMore(false);
+          setHasMoreGenre(false);
         } else {
           setGenreMovies((prev) => {
             const seen = new Set(prev.map((m) => String(m.id)));
@@ -108,12 +160,12 @@ export default function HomeGenreSection({
             cacheRef.current.set(selectedGenre, updated);
             return updated;
           });
-          setPage(nextPage);
-          if (nextResults.length < 18) setHasMore(false);
+          setGenrePage(nextPage);
+          if (nextResults.length < 18) setHasMoreGenre(false);
         }
       }
     } catch (err) {
-      console.warn("Load more error:", err);
+      console.warn("Load more genre movies error:", err);
     } finally {
       setIsLoadingMore(false);
     }
@@ -124,12 +176,15 @@ export default function HomeGenreSection({
       {/* Category / Genre Filter Bar */}
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs font-semibold text-white/60">
-          <span>Movie Categories & Genres</span>
+          <div className="flex items-center gap-2">
+            <FilmIcon className="size-4 text-amber-400" />
+            <span>Movie Categories & Genres</span>
+          </div>
           {selectedGenre !== "All" && (
             <button
               type="button"
               onClick={() => handleSelectGenre("All")}
-              className="text-amber-400 hover:underline"
+              className="text-amber-400 hover:underline cursor-pointer"
             >
               Reset to All
             </button>
@@ -146,7 +201,7 @@ export default function HomeGenreSection({
                 type="button"
                 onClick={() => handleSelectGenre(genre)}
                 aria-pressed={isActive}
-                className={`h-9 px-4 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
+                className={`h-9 px-4 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
                   isActive
                     ? "bg-amber-500 text-black shadow-lg shadow-amber-950/60 ring-1 ring-amber-300 scale-[1.02]"
                     : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white ring-1 ring-white/10"
@@ -161,47 +216,47 @@ export default function HomeGenreSection({
 
       {/* Content Rendering: All Mode vs Specific Genre View */}
       {selectedGenre === "All" ? (
-        <>
-          {/* Trending Movies Section */}
-          <section aria-labelledby="trending-heading">
-            <div className="mb-3.5 flex items-center justify-between">
+        <div className="space-y-8">
+          {/* Trending & All Movies Combined Feed */}
+          <section aria-labelledby="all-movies-heading" className="space-y-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FlameIcon className="size-5 text-amber-400" />
-                <h2 id="trending-heading" className="text-lg sm:text-xl font-bold text-white">
-                  Trending & Popular Movies
+                <h2 id="all-movies-heading" className="text-lg sm:text-xl font-bold text-white">
+                  All Trending & Popular Movies
                 </h2>
               </div>
               <span className="text-xs text-white/40 font-semibold">
-                {initialTrending.length} titles
+                {allMovies.length} movies loaded
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-              {initialTrending.map((movie) => (
-                <MovieCard key={movie.id} movie={movie} />
-              ))}
-            </div>
-          </section>
 
-          {/* Top Rated Movies Section */}
-          <section aria-labelledby="top-rated-heading">
-            <div className="mb-3.5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <StarIcon className="size-5 text-amber-400" />
-                <h2 id="top-rated-heading" className="text-lg sm:text-xl font-bold text-white">
-                  Top Rated Classics & Masterpieces
-                </h2>
-              </div>
-              <span className="text-xs text-white/40 font-semibold">
-                {initialTopRated.length} titles
-              </span>
-            </div>
             <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-              {initialTopRated.map((movie) => (
+              {allMovies.map((movie) => (
                 <MovieCard key={movie.id} movie={movie} />
               ))}
             </div>
+
+            {/* Load More Button for All Movies */}
+            {hasMoreAll && (
+              <div className="flex justify-center pt-4">
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="flex items-center gap-2 rounded-xl bg-amber-500/20 px-8 py-3 text-xs font-bold text-amber-300 ring-1 ring-amber-500/40 transition hover:bg-amber-500 hover:text-black active:scale-95 disabled:opacity-50 cursor-pointer"
+                >
+                  {isLoadingMore ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+                  ) : (
+                    <ChevronDownIcon className="size-4" />
+                  )}
+                  <span>{isLoadingMore ? "Loading more movies…" : "Load More Movies"}</span>
+                </button>
+              </div>
+            )}
           </section>
-        </>
+        </div>
       ) : (
         /* Specific Genre View */
         <section aria-labelledby="genre-heading" className="space-y-6">
@@ -236,7 +291,7 @@ export default function HomeGenreSection({
               <button
                 type="button"
                 onClick={() => handleSelectGenre("All")}
-                className="mt-3 text-xs font-semibold text-amber-400 hover:underline"
+                className="mt-3 text-xs font-semibold text-amber-400 hover:underline cursor-pointer"
               >
                 Back to All Movies
               </button>
@@ -249,21 +304,21 @@ export default function HomeGenreSection({
                 ))}
               </div>
 
-              {/* Load More Button */}
-              {hasMore && (
+              {/* Load More Button for Genre */}
+              {hasMoreGenre && (
                 <div className="flex justify-center pt-4">
                   <button
                     type="button"
                     onClick={handleLoadMore}
                     disabled={isLoadingMore}
-                    className="flex items-center gap-2 rounded-xl bg-white/10 px-6 py-2.5 text-xs font-bold text-white ring-1 ring-white/15 transition hover:bg-white/20 hover:text-amber-400 active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-2 rounded-xl bg-amber-500/20 px-8 py-3 text-xs font-bold text-amber-300 ring-1 ring-amber-500/40 transition hover:bg-amber-500 hover:text-black active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
                     {isLoadingMore ? (
-                      <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
                     ) : (
-                      <ChevronDownIcon className="size-4 text-amber-400" />
+                      <ChevronDownIcon className="size-4" />
                     )}
-                    <span>{isLoadingMore ? "Loading more movies…" : "Load More Movies"}</span>
+                    <span>{isLoadingMore ? "Loading more movies…" : `Load More ${selectedGenre} Movies`}</span>
                   </button>
                 </div>
               )}

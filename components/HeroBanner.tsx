@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ClockIcon, FilmIcon, PlayIcon, StarIcon } from "@/components/Icons";
 import type { MovieFull } from "@/types/movie";
+
+const FALLBACK_BACKDROP = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&auto=format&fit=crop&q=80";
 
 interface HeroBannerProps {
   movie: MovieFull;
@@ -11,22 +14,23 @@ interface HeroBannerProps {
 
 export default function HeroBanner({ movie }: HeroBannerProps) {
   const year = movie.release_date ? movie.release_date.slice(0, 4) : "";
+  const [bgSrc, setBgSrc] = useState(movie.backdrop_path || movie.poster_path || FALLBACK_BACKDROP);
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-zinc-900 ring-1 ring-white/15 shadow-2xl">
       {/* Cinematic Backdrop Image */}
-      {movie.backdrop_path && (
-        <div className="absolute inset-0">
-          <Image
-            src={movie.backdrop_path}
-            alt={movie.title}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center opacity-40 brightness-75 scale-105"
-          />
-        </div>
-      )}
+      <div className="absolute inset-0">
+        <Image
+          src={bgSrc}
+          alt={movie.title}
+          fill
+          priority
+          unoptimized
+          onError={() => setBgSrc(FALLBACK_BACKDROP)}
+          sizes="100vw"
+          className="object-cover object-center opacity-40 brightness-75 scale-105"
+        />
+      </div>
 
       {/* Radial and Linear Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#0c0d14] via-[#0c0d14]/70 to-transparent" />

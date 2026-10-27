@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BookmarkIcon, PlayIcon, StarIcon } from "@/components/Icons";
 import { useMovieSavepoints } from "@/lib/savepoints";
 import type { MovieBase } from "@/types/movie";
+
+const FALLBACK_POSTER = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&auto=format&fit=crop&q=80";
 
 interface MovieCardProps {
   movie: MovieBase;
@@ -14,6 +17,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
   const { ready, get } = useMovieSavepoints();
   const saved = ready ? get(movie.id) : undefined;
   const year = movie.release_date ? movie.release_date.slice(0, 4) : "";
+  const [imgSrc, setImgSrc] = useState(movie.poster_path || FALLBACK_POSTER);
 
   return (
     <Link
@@ -22,19 +26,15 @@ export default function MovieCard({ movie }: MovieCardProps) {
     >
       {/* Poster Container */}
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-zinc-900">
-        {movie.poster_path ? (
-          <Image
-            src={movie.poster_path}
-            alt={movie.title}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-xs text-white/30">
-            No Poster
-          </div>
-        )}
+        <Image
+          src={imgSrc}
+          alt={movie.title}
+          fill
+          unoptimized
+          onError={() => setImgSrc(FALLBACK_POSTER)}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
 
         {/* Hover Gradient Overlay & Quick Play */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex items-center justify-center">

@@ -60,8 +60,7 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
       <div className="relative overflow-hidden rounded-3xl bg-zinc-900/60 p-4 sm:p-8 ring-1 ring-white/10 backdrop-blur-xl">
         {movie.backdrop_path && (
           <div className="absolute inset-0 -z-10">
-            <Image
-              src={movie.backdrop_path}
+            <Image unoptimized src={movie.backdrop_path}
               alt={movie.title}
               fill
               priority
@@ -76,8 +75,7 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
           {/* Poster */}
           <div className="relative aspect-[2/3] w-40 sm:w-52 md:w-64 shrink-0 overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-white/20 shadow-2xl mx-auto md:mx-0">
             {movie.poster_path ? (
-              <Image
-                src={movie.poster_path}
+              <Image unoptimized src={movie.poster_path}
                 alt={movie.title}
                 fill
                 priority

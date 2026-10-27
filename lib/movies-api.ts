@@ -12,7 +12,7 @@ function parseCinemetaMeta(item: any): MovieBase {
     imdb_id: imdbId.startsWith("tt") ? imdbId : null,
     title: item.name ?? "Untitled Movie",
     original_title: item.name ?? "Untitled Movie",
-    overview: item.description ?? "",
+    overview: item.description ?? "No synopsis available.",
     poster_path: item.poster ?? "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&auto=format&fit=crop&q=80",
     backdrop_path: item.background ?? item.poster ?? null,
     release_date: item.releaseInfo ?? item.year ? String(item.releaseInfo ?? item.year) : "2024",
@@ -37,8 +37,7 @@ export async function getTrendingMovies(limit = 24): Promise<MovieBase[]> {
       const data = await res.json();
       if (Array.isArray(data.metas) && data.metas.length > 0) {
         const live = data.metas.map(parseCinemetaMeta);
-        // Combine live top with our verified top list
-        const merged = [...MOVIES.slice(0, 8), ...live];
+        const merged = [...MOVIES.slice(0, 12), ...live];
         const seen = new Set();
         return merged.filter((m: MovieBase) => {
           const key = m.title.toLowerCase();
@@ -60,18 +59,13 @@ export async function getTopRatedMovies(limit = 24): Promise<MovieBase[]> {
 }
 
 export async function getMoviesByGenre(genre: string, page = 1, limit = 24): Promise<MovieBase[]> {
-  if (!genre || genre === "All") {
-    return getTrendingMovies(limit);
-  }
+  const isAll = !genre || genre === "All";
+  const skip = (page - 1) * limit;
 
-  const g = genre.toLowerCase();
-
-  // Try live Cinemeta genre feed with pagination
   try {
-    const skip = (page - 1) * limit;
-    const url = skip > 0
-      ? `${CINEMETA_BASE}/catalog/movie/top/genre=${encodeURIComponent(genre)}/skip=${skip}.json`
-      : `${CINEMETA_BASE}/catalog/movie/top/genre=${encodeURIComponent(genre)}.json`;
+    const url = isAll
+      ? (skip > 0 ? `${CINEMETA_BASE}/catalog/movie/top/skip=${skip}.json` : `${CINEMETA_BASE}/catalog/movie/top.json`)
+      : (skip > 0 ? `${CINEMETA_BASE}/catalog/movie/top/genre=${encodeURIComponent(genre)}/skip=${skip}.json` : `${CINEMETA_BASE}/catalog/movie/top/genre=${encodeURIComponent(genre)}.json`);
 
     const res = await fetch(url, {
       next: { revalidate: 3600 },
@@ -82,6 +76,20 @@ export async function getMoviesByGenre(genre: string, page = 1, limit = 24): Pro
       const data = await res.json();
       if (Array.isArray(data.metas) && data.metas.length > 0) {
         const live = data.metas.map(parseCinemetaMeta);
+
+        if (isAll) {
+          const localBatch = page === 1 ? MOVIES : [];
+          const combined = [...localBatch, ...live];
+          const seen = new Set();
+          return combined.filter((m: MovieBase) => {
+            const key = m.title.toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          }).slice(0, limit);
+        }
+
+        const g = genre.toLowerCase();
         const localMatches = MOVIES.filter((m) =>
           m.genres.some((item) => item.toLowerCase() === g)
         );
@@ -100,9 +108,13 @@ export async function getMoviesByGenre(genre: string, page = 1, limit = 24): Pro
   }
 
   // Local fallback
+  if (isAll) {
+    return MOVIES.slice(skip, skip + limit);
+  }
+  const g = genre.toLowerCase();
   return MOVIES.filter((m) =>
     m.genres.some((item) => item.toLowerCase() === g)
-  ).slice(0, limit);
+  ).slice(skip, skip + limit);
 }
 
 export async function getMovieById(id: string | number): Promise<MovieFull | null> {
@@ -112,7 +124,7 @@ export async function getMovieById(id: string | number): Promise<MovieFull | nul
   const found = MOVIES.find((m) => String(m.id) === strId || m.imdb_id === strId);
   if (found) return found;
 
-  // Query Cinemeta's live metadata API for any IMDb ID (tt...) or title
+  // Query Cinemeta's live metadata API for any IMDb ID (tt...)
   if (strId.startsWith("tt")) {
     try {
       const res = await fetch(`${CINEMETA_BASE}/meta/movie/${strId}.json`, {
@@ -145,7 +157,6 @@ export async function searchMovies(query: string, limit = 18): Promise<MovieBase
   const q = query.trim().toLowerCase();
   if (!q) return [];
 
-  // 1. Search local verified catalog
   const localMatches = MOVIES.filter(
     (m) =>
       m.title.toLowerCase().includes(q) ||
@@ -155,7 +166,6 @@ export async function searchMovies(query: string, limit = 18): Promise<MovieBase
       (m.cast ?? []).some((c) => c.toLowerCase().includes(q))
   );
 
-  // 2. Query Cinemeta Live Global Search (covers 100,000+ movies worldwide!)
   try {
     const res = await fetch(
       `${CINEMETA_BASE}/catalog/movie/top/search=${encodeURIComponent(query.trim())}.json`,
@@ -167,7 +177,7 @@ export async function searchMovies(query: string, limit = 18): Promise<MovieBase
         const liveMatches = data.metas.map(parseCinemetaMeta);
         const merged = [...localMatches, ...liveMatches];
         const seen = new Set();
-        return merged.filter((m) => {
+        return merged.filter((m: MovieBase) => {
           const key = m.title.toLowerCase();
           if (seen.has(key)) return false;
           seen.add(key);

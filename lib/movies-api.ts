@@ -6,6 +6,12 @@ const CINEMETA_BASE = "https://v3-cinemeta.strem.io";
 function parseCinemetaMeta(item: any): MovieBase {
   const imdbId = String(item.id ?? "");
   const runtimeMin = typeof item.runtime === "string" ? parseInt(item.runtime, 10) : item.runtime;
+  const genres =
+    Array.isArray(item.genres) && item.genres.length > 0
+      ? item.genres
+      : Array.isArray(item.genre)
+      ? item.genre
+      : [];
 
   return {
     id: imdbId,
@@ -18,7 +24,7 @@ function parseCinemetaMeta(item: any): MovieBase {
     release_date: item.releaseInfo ?? item.year ? String(item.releaseInfo ?? item.year) : "2024",
     vote_average: typeof item.imdbRating === "string" ? parseFloat(item.imdbRating) || 7.5 : (item.imdbRating || 7.5),
     runtime: !isNaN(runtimeMin) && runtimeMin > 0 ? runtimeMin : 120,
-    genres: Array.isArray(item.genres) ? item.genres : [],
+    genres,
     tagline: null,
   };
 }
@@ -127,21 +133,36 @@ export async function getMovieById(id: string | number): Promise<MovieFull | nul
   // Query Cinemeta's live metadata API for any IMDb ID (tt...)
   if (strId.startsWith("tt")) {
     try {
-      const res = await fetch(`${CINEMETA_BASE}/meta/movie/${strId}.json`, {
+      let res = await fetch(`${CINEMETA_BASE}/meta/movie/${strId}.json`, {
         next: { revalidate: 86400 },
         signal: AbortSignal.timeout(5000),
       });
+
+      if (!res.ok) {
+        res = await fetch(`${CINEMETA_BASE}/meta/series/${strId}.json`, {
+          next: { revalidate: 86400 },
+          signal: AbortSignal.timeout(5000),
+        });
+      }
+
       if (res.ok) {
         const data = await res.json();
         if (data.meta) {
           const item = data.meta;
           const base = parseCinemetaMeta(item);
+          const trailerYtId =
+            item.trailer ??
+            item.trailerStreams?.[0]?.ytId ??
+            (Array.isArray(item.trailers) ? item.trailers[0]?.source : null);
+
           return {
             ...base,
             status: "Released",
-            director: Array.isArray(item.director) ? item.director.join(", ") : item.director,
+            director: Array.isArray(item.director)
+              ? item.director.join(", ")
+              : (item.director ?? undefined),
             cast: Array.isArray(item.cast) ? item.cast : [],
-            trailer_url: item.trailer ? `https://www.youtube.com/watch?v=${item.trailer}` : null,
+            trailer_url: trailerYtId ? `https://www.youtube.com/watch?v=${trailerYtId}` : null,
           };
         }
       }

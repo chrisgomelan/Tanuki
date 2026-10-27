@@ -6,7 +6,7 @@ import type { MovieBase, MovieSavepoint, WatchStatus } from "@/types/movie";
 const STORAGE_KEY = "tanuki_movie_savepoints_v1";
 
 export function useMovieSavepoints() {
-  const [savepoints, setSavepoints] = useState<Record<number, MovieSavepoint>>({});
+  const [savepoints, setSavepoints] = useState<Record<string, MovieSavepoint>>({});
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export function useMovieSavepoints() {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const persist = (data: Record<number, MovieSavepoint>) => {
+  const persist = (data: Record<string, MovieSavepoint>) => {
     setSavepoints(data);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -44,7 +44,7 @@ export function useMovieSavepoints() {
     }
   };
 
-  const get = (id: number): MovieSavepoint | undefined => savepoints[id];
+  const get = (id: string | number): MovieSavepoint | undefined => savepoints[String(id)];
 
   const upsert = (
     movie: MovieBase,
@@ -52,7 +52,8 @@ export function useMovieSavepoints() {
     timestamp: number = 0,
     duration: number = (movie.runtime ?? 120) * 60
   ) => {
-    const existing = savepoints[movie.id];
+    const key = String(movie.id);
+    const existing = savepoints[key];
     const updated: MovieSavepoint = {
       id: movie.id,
       imdb_id: movie.imdb_id ?? existing?.imdb_id,
@@ -66,13 +67,13 @@ export function useMovieSavepoints() {
       lastWatched: Date.now(),
     };
 
-    const next = { ...savepoints, [movie.id]: updated };
+    const next = { ...savepoints, [key]: updated };
     persist(next);
   };
 
-  const remove = (id: number) => {
+  const remove = (id: string | number) => {
     const next = { ...savepoints };
-    delete next[id];
+    delete next[String(id)];
     persist(next);
   };
 

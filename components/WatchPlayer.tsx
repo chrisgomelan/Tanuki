@@ -7,9 +7,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ExternalLinkIcon,
-  InfoIcon,
   MiniPlayerIcon,
-  PlayIcon,
 } from "@/components/Icons";
 import type { MovieFull } from "@/types/movie";
 
@@ -21,55 +19,55 @@ const SERVERS = [
   {
     id: "vidlink",
     name: "VidLink (HD Movie)",
-    getUrl: (id: number, _imdb: string | null | undefined) =>
+    getUrl: (id: string | number, _imdb: string | null | undefined) =>
       `https://vidlink.pro/movie/${id}?primaryColor=f59e0b&secondaryColor=d97706`,
   },
   {
     id: "vidsrc-me",
     name: "VidSrc Stream",
-    getUrl: (id: number, imdb: string | null | undefined) =>
+    getUrl: (id: string | number, imdb: string | null | undefined) =>
       imdb ? `https://vidsrc.me/embed/movie?imdb=${imdb}` : `https://vidsrc.me/embed/movie?tmdb=${id}`,
   },
   {
     id: "autoembed",
     name: "AutoEmbed (Multi-Source)",
-    getUrl: (id: number, _imdb: string | null | undefined) =>
+    getUrl: (id: string | number, _imdb: string | null | undefined) =>
       `https://player.autoembed.cc/embed/movie/${id}`,
   },
   {
     id: "vidsrc-cc",
     name: "VidSrc CC (Sub & Dub)",
-    getUrl: (id: number, _imdb: string | null | undefined) =>
+    getUrl: (id: string | number, _imdb: string | null | undefined) =>
       `https://vidsrc.cc/v2/embed/movie/${id}`,
   },
   {
     id: "multiembed",
     name: "MultiEmbed Stream",
-    getUrl: (id: number, imdb: string | null | undefined) =>
+    getUrl: (id: string | number, imdb: string | null | undefined) =>
       `https://multiembed.mov/?video_id=${imdb || id}`,
   },
   {
     id: "embedsu",
     name: "Embed.su (Fast)",
-    getUrl: (id: number, _imdb: string | null | undefined) =>
+    getUrl: (id: string | number, _imdb: string | null | undefined) =>
       `https://embed.su/embed/movie/${id}`,
   },
   {
     id: "videasy",
     name: "Videasy Server",
-    getUrl: (id: number, _imdb: string | null | undefined) =>
+    getUrl: (id: string | number, _imdb: string | null | undefined) =>
       `https://player.videasy.to/movie/${id}`,
   },
   {
     id: "twoembed",
     name: "2Embed Player",
-    getUrl: (id: number, imdb: string | null | undefined) =>
+    getUrl: (id: string | number, imdb: string | null | undefined) =>
       `https://www.2embed.cc/embed/${imdb || id}`,
   },
   {
     id: "smashystream",
     name: "SmashyStream",
-    getUrl: (id: number, _imdb: string | null | undefined) =>
+    getUrl: (id: string | number, _imdb: string | null | undefined) =>
       `https://embed.smashystream.com/playere.php?tmdb=${id}`,
   },
 ];

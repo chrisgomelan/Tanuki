@@ -1,5 +1,5 @@
 export interface MovieBase {
-  id: number;
+  id: string | number;
   imdb_id?: string | null;
   title: string;
   original_title?: string;
@@ -25,7 +25,7 @@ export interface MovieFull extends MovieBase {
 export type WatchStatus = "watching" | "plan_to_watch" | "completed" | "dropped";
 
 export interface MovieSavepoint {
-  id: number;
+  id: string | number;
   imdb_id?: string | null;
   title: string;
   poster_path: string;

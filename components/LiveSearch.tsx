@@ -110,7 +110,7 @@ export default function LiveSearch({
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   };
 
-  const handleSelectMovie = (id: number) => {
+  const handleSelectMovie = (id: string | number) => {
     setIsOpen(false);
     onSelect?.();
     router.push(`/movie/${id}`);

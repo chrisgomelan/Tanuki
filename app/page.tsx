@@ -12,7 +12,7 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-6 space-y-8 sm:space-y-12">
+    <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 sm:space-y-12">
       {/* Hero Featured Movie Banner */}
       {featured && <HeroBanner movie={featured} />}
 

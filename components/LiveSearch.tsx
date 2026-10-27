@@ -135,8 +135,9 @@ export default function LiveSearch({
           <input
             ref={inputRef}
             id={`live-search-${variant}`}
-            type="text"
+            type="search"
             inputMode="search"
+            enterKeyHint="search"
             autoFocus={autoFocus}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -152,23 +153,25 @@ export default function LiveSearch({
             }}
             placeholder="Search movie title, director…"
             autoComplete="off"
-            className={`w-full rounded-xl bg-white/10 text-xs text-white placeholder-white/40 ring-1 ring-white/15 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-ms-clear]:hidden ${
-              isMobile ? "h-10 pl-3.5 pr-10 text-sm" : "h-9 pl-3.5 pr-8 focus:w-72 lg:focus:w-80"
+            className={`w-full rounded-xl bg-white/10 text-white placeholder-white/40 ring-1 ring-white/15 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-ms-clear]:hidden ${
+              isMobile
+                ? "h-11 pl-3.5 pr-10 text-base"
+                : "h-9 pl-3.5 pr-8 text-xs focus:w-72 lg:focus:w-80"
             }`}
           />
 
           {/* Right indicator: spinner or clear button */}
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
             {isLoading ? (
               <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
             ) : query.length > 0 ? (
               <button
                 type="button"
                 onClick={handleClear}
-                className="text-white/40 hover:text-white transition"
+                className="flex h-6 w-6 items-center justify-center rounded-full text-white/40 hover:text-white transition"
                 aria-label="Clear search input"
               >
-                <CloseIcon className="size-3" />
+                <CloseIcon className="size-3.5" />
               </button>
             ) : (
               <SearchIcon className="size-3.5 text-white/30 pointer-events-none" />
@@ -182,11 +185,11 @@ export default function LiveSearch({
         <div
           role="listbox"
           className={`absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl bg-[#141520]/95 backdrop-blur-xl ring-1 ring-white/15 shadow-2xl shadow-black/80 animate-in fade-in zoom-in-95 duration-150 ${
-            isMobile ? "w-full" : "min-w-[320px] max-w-[380px]"
+            isMobile ? "w-full max-h-[55vh]" : "min-w-[320px] max-w-[380px] max-h-80"
           }`}
         >
           {results.length > 0 ? (
-            <div className="max-h-80 overflow-y-auto divide-y divide-white/5 py-1 scrollbar-thin">
+            <div className="overflow-y-auto divide-y divide-white/5 py-1 scrollbar-thin touch-scroll">
               <div className="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400/80">
                 Live Movie Matches
               </div>
@@ -197,7 +200,7 @@ export default function LiveSearch({
                     key={movie.id}
                     type="button"
                     onClick={() => handleSelectMovie(movie.id)}
-                    className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition hover:bg-white/10 active:bg-amber-500/20"
+                    className="flex w-full items-center gap-3 px-3.5 py-2.5 sm:py-2 text-left transition hover:bg-white/10 active:bg-amber-500/20 cursor-pointer"
                   >
                     <div className="relative h-12 w-9 flex-shrink-0 overflow-hidden rounded-md bg-white/5 ring-1 ring-white/10">
                       {movie.poster_path ? (

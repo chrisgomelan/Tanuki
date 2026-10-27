@@ -191,8 +191,8 @@ export default function HomeGenreSection({
           )}
         </div>
 
-        {/* Scrollable genre pills container */}
-        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+        {/* Scrollable genre pills container with edge-to-edge touch scroll */}
+        <div className="-mx-3 px-3 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto pb-2 no-scrollbar touch-scroll">
           {GENRES.map((genre) => {
             const isActive = selectedGenre === genre;
             return (
@@ -201,7 +201,7 @@ export default function HomeGenreSection({
                 type="button"
                 onClick={() => handleSelectGenre(genre)}
                 aria-pressed={isActive}
-                className={`h-9 px-4 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
+                className={`h-10 px-4 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer shrink-0 ${
                   isActive
                     ? "bg-amber-500 text-black shadow-lg shadow-amber-950/60 ring-1 ring-amber-300 scale-[1.02]"
                     : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white ring-1 ring-white/10"
@@ -222,7 +222,7 @@ export default function HomeGenreSection({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FlameIcon className="size-5 text-amber-400" />
-                <h2 id="all-movies-heading" className="text-lg sm:text-xl font-bold text-white">
+                <h2 id="all-movies-heading" className="text-base sm:text-xl font-bold text-white">
                   All Trending & Popular Movies
                 </h2>
               </div>
@@ -231,7 +231,7 @@ export default function HomeGenreSection({
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {allMovies.map((movie) => (
                 <MovieCard key={movie.id} movie={movie} />
               ))}
@@ -244,7 +244,7 @@ export default function HomeGenreSection({
                   type="button"
                   onClick={handleLoadMore}
                   disabled={isLoadingMore}
-                  className="flex items-center gap-2 rounded-xl bg-amber-500/20 px-8 py-3 text-xs font-bold text-amber-300 ring-1 ring-amber-500/40 transition hover:bg-amber-500 hover:text-black active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-amber-500/20 px-8 py-3.5 text-xs font-bold text-amber-300 ring-1 ring-amber-500/40 transition hover:bg-amber-500 hover:text-black active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {isLoadingMore ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
@@ -275,7 +275,7 @@ export default function HomeGenreSection({
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {Array.from({ length: 12 }).map((_, idx) => (
                 <div
                   key={idx}
@@ -298,7 +298,7 @@ export default function HomeGenreSection({
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {genreMovies.map((movie) => (
                   <MovieCard key={movie.id} movie={movie} />
                 ))}
@@ -311,7 +311,7 @@ export default function HomeGenreSection({
                     type="button"
                     onClick={handleLoadMore}
                     disabled={isLoadingMore}
-                    className="flex items-center gap-2 rounded-xl bg-amber-500/20 px-8 py-3 text-xs font-bold text-amber-300 ring-1 ring-amber-500/40 transition hover:bg-amber-500 hover:text-black active:scale-95 disabled:opacity-50 cursor-pointer"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-amber-500/20 px-8 py-3.5 text-xs font-bold text-amber-300 ring-1 ring-amber-500/40 transition hover:bg-amber-500 hover:text-black active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
                     {isLoadingMore ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />

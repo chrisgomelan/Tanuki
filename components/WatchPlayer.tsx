@@ -125,7 +125,7 @@ export default function WatchPlayer({ movie }: WatchPlayerProps) {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-5 left-1/2 z-50 flex items-center gap-1.5 -translate-x-1/2 rounded-full bg-amber-500 px-5 py-2.5 text-xs font-bold text-black shadow-xl shadow-amber-950/80 ring-1 ring-white/30 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200"
+          className="fixed bottom-20 sm:bottom-6 left-1/2 z-50 flex items-center gap-1.5 -translate-x-1/2 rounded-full bg-amber-500 px-5 py-2.5 text-xs font-bold text-black shadow-xl shadow-amber-950/80 ring-1 ring-white/30 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200"
         >
           <CheckIcon className="size-4 shrink-0 text-black" />
           <span>{saveToast}</span>
@@ -140,8 +140,8 @@ export default function WatchPlayer({ movie }: WatchPlayerProps) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
             </span>
-            <h2 className="text-lg font-bold text-white sm:text-xl">Watch Full Movie</h2>
-            <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300 ring-1 ring-amber-500/30">
+            <h2 className="text-base sm:text-xl font-bold text-white">Watch Full Movie</h2>
+            <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-semibold text-amber-300 ring-1 ring-amber-500/30">
               HD
             </span>
           </div>
@@ -157,7 +157,7 @@ export default function WatchPlayer({ movie }: WatchPlayerProps) {
           </p>
         </div>
 
-        {/* Server & Desktop Popout actions */}
+        {/* Server & Actions */}
         <div className="flex items-center gap-2">
           {/* Server Select Dropdown */}
           <div className="relative flex-1 sm:flex-initial">
@@ -165,7 +165,7 @@ export default function WatchPlayer({ movie }: WatchPlayerProps) {
               value={server}
               onChange={(e) => setServer(e.target.value)}
               aria-label="Streaming Server"
-              className="h-10 sm:h-9 w-full rounded-xl bg-white/10 pl-3 pr-8 text-xs font-semibold text-white/90 ring-1 ring-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer appearance-none transition hover:bg-white/15"
+              className="h-11 sm:h-9 w-full rounded-xl bg-white/10 pl-3 pr-8 text-xs font-semibold text-white/90 ring-1 ring-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer appearance-none transition hover:bg-white/15"
             >
               {SERVERS.map((srv) => (
                 <option key={srv.id} value={srv.id} className="bg-zinc-900 text-white">
@@ -184,10 +184,10 @@ export default function WatchPlayer({ movie }: WatchPlayerProps) {
             target="_blank"
             rel="noopener noreferrer"
             title="Open in new window"
-            className="flex h-10 sm:h-9 items-center justify-center gap-1.5 rounded-xl bg-white/10 px-3 text-xs font-semibold text-white/80 transition hover:bg-white/20 active:scale-95 shrink-0"
+            className="flex h-11 sm:h-9 items-center justify-center gap-1.5 rounded-xl bg-white/10 px-3 text-xs font-semibold text-white/80 transition hover:bg-white/20 active:scale-95 shrink-0"
           >
             <ExternalLinkIcon className="size-3.5" />
-            <span>New Tab</span>
+            <span className="hidden xs:inline">New Tab</span>
           </a>
 
           {/* Float Mini Player */}
@@ -234,33 +234,35 @@ export default function WatchPlayer({ movie }: WatchPlayerProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-black/40 rounded-xl px-2.5 py-1.5 ring-1 ring-white/15">
+          <div className="flex items-center justify-between sm:justify-end gap-2">
+            <div className="flex items-center gap-1 bg-black/40 rounded-xl px-3 py-2 sm:px-2.5 sm:py-1.5 ring-1 ring-white/15">
               <input
-                type="number"
-                min="0"
-                max="300"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={3}
                 placeholder="MM"
                 value={minutesInput}
-                onChange={(e) => setMinutesInput(e.target.value)}
-                className="w-12 bg-transparent text-center text-xs font-bold text-white focus:outline-none placeholder-white/30"
+                onChange={(e) => setMinutesInput(e.target.value.replace(/\D/g, ""))}
+                className="w-10 sm:w-12 bg-transparent text-center text-sm sm:text-xs font-bold text-white focus:outline-none placeholder-white/30"
               />
               <span className="text-xs text-white/40">:</span>
               <input
-                type="number"
-                min="0"
-                max="59"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={2}
                 placeholder="SS"
                 value={secondsInput}
-                onChange={(e) => setSecondsInput(e.target.value)}
-                className="w-10 bg-transparent text-center text-xs font-bold text-white focus:outline-none placeholder-white/30"
+                onChange={(e) => setSecondsInput(e.target.value.replace(/\D/g, ""))}
+                className="w-8 sm:w-10 bg-transparent text-center text-sm sm:text-xs font-bold text-white focus:outline-none placeholder-white/30"
               />
             </div>
 
             <button
               type="button"
               onClick={handleSaveTimestamp}
-              className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-black transition hover:bg-amber-400 active:scale-95"
+              className="flex min-h-[40px] sm:min-h-[36px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-black transition hover:bg-amber-400 active:scale-95 cursor-pointer"
             >
               <CheckIcon className="size-3.5 text-black" />
               <span>Save</span>

@@ -48,14 +48,14 @@ export default function SaveButton({ movie }: SaveButtonProps) {
               key={key}
               type="button"
               onClick={() => handleStatusChange(key)}
-              className={`flex items-center justify-center gap-1 rounded-xl py-2 px-2 text-xs font-bold transition active:scale-95 ${
+              className={`flex min-h-[38px] sm:min-h-[40px] items-center justify-center gap-1 rounded-xl py-1.5 px-1 sm:px-2 text-[10px] xs:text-[11px] sm:text-xs font-bold transition active:scale-95 text-center leading-tight cursor-pointer ${
                 isActive
                   ? "bg-amber-500 text-black shadow-md shadow-amber-950/40 ring-1 ring-amber-300"
                   : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white ring-1 ring-white/10"
               }`}
             >
-              {isActive && <CheckIcon className="size-3 text-black" />}
-              <span>{label}</span>
+              {isActive && <CheckIcon className="size-3 text-black shrink-0" />}
+              <span className="truncate">{label}</span>
             </button>
           );
         })}

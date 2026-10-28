@@ -64,15 +64,52 @@ export async function getTopRatedMovies(limit = 24): Promise<MovieBase[]> {
   return sorted.slice(0, limit);
 }
 
-export async function getMoviesByGenre(genre: string, page = 1, limit = 24): Promise<MovieBase[]> {
+export function matchesYear(releaseDate: string | undefined | null, yearFilter: string): boolean {
+  if (!yearFilter || yearFilter === "All") return true;
+  if (!releaseDate) return false;
+  const y = parseInt(releaseDate.slice(0, 4), 10);
+  if (isNaN(y)) return false;
+
+  if (/^\d{4}$/.test(yearFilter)) {
+    return y === parseInt(yearFilter, 10);
+  }
+  if (yearFilter === "2020s") return y >= 2020 && y <= 2029;
+  if (yearFilter === "2010s") return y >= 2010 && y <= 2019;
+  if (yearFilter === "2000s") return y >= 2000 && y <= 2009;
+  if (yearFilter === "classic") return y < 2000;
+  return true;
+}
+
+export async function getMoviesByGenre(
+  genre: string,
+  page = 1,
+  limit = 24,
+  year?: string
+): Promise<MovieBase[]> {
   const isAll = !genre || genre === "All";
+  const hasYear = Boolean(year && year !== "All");
   const skip = (page - 1) * limit;
+  const isSingleYear = hasYear && /^\d{4}$/.test(year!);
+
+  let url: string;
+  if (isSingleYear && isAll) {
+    url =
+      skip > 0
+        ? `${CINEMETA_BASE}/catalog/movie/year/genre=${year}/skip=${skip}.json`
+        : `${CINEMETA_BASE}/catalog/movie/year/genre=${year}.json`;
+  } else if (isAll) {
+    url =
+      skip > 0
+        ? `${CINEMETA_BASE}/catalog/movie/top/skip=${skip}.json`
+        : `${CINEMETA_BASE}/catalog/movie/top.json`;
+  } else {
+    url =
+      skip > 0
+        ? `${CINEMETA_BASE}/catalog/movie/top/genre=${encodeURIComponent(genre)}/skip=${skip}.json`
+        : `${CINEMETA_BASE}/catalog/movie/top/genre=${encodeURIComponent(genre)}.json`;
+  }
 
   try {
-    const url = isAll
-      ? (skip > 0 ? `${CINEMETA_BASE}/catalog/movie/top/skip=${skip}.json` : `${CINEMETA_BASE}/catalog/movie/top.json`)
-      : (skip > 0 ? `${CINEMETA_BASE}/catalog/movie/top/genre=${encodeURIComponent(genre)}/skip=${skip}.json` : `${CINEMETA_BASE}/catalog/movie/top/genre=${encodeURIComponent(genre)}.json`);
-
     const res = await fetch(url, {
       next: { revalidate: 3600 },
       signal: AbortSignal.timeout(5000),
@@ -81,32 +118,45 @@ export async function getMoviesByGenre(genre: string, page = 1, limit = 24): Pro
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data.metas) && data.metas.length > 0) {
-        const live = data.metas.map(parseCinemetaMeta);
+        let live = data.metas.map(parseCinemetaMeta);
+        if (hasYear && !isSingleYear) {
+          live = live.filter((m: MovieBase) => matchesYear(m.release_date, year!));
+        }
 
         if (isAll) {
-          const localBatch = page === 1 ? MOVIES : [];
+          let localBatch = page === 1 ? MOVIES : [];
+          if (hasYear) {
+            localBatch = localBatch.filter((m) => matchesYear(m.release_date, year!));
+          }
           const combined = [...localBatch, ...live];
           const seen = new Set();
-          return combined.filter((m: MovieBase) => {
+          return combined
+            .filter((m: MovieBase) => {
+              const key = m.title.toLowerCase();
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            })
+            .slice(0, limit);
+        }
+
+        const g = genre.toLowerCase();
+        let localMatches = MOVIES.filter((m) =>
+          m.genres.some((item) => item.toLowerCase() === g)
+        );
+        if (hasYear) {
+          localMatches = localMatches.filter((m) => matchesYear(m.release_date, year!));
+        }
+        const combined = page === 1 ? [...localMatches, ...live] : live;
+        const seen = new Set();
+        return combined
+          .filter((m: MovieBase) => {
             const key = m.title.toLowerCase();
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
-          }).slice(0, limit);
-        }
-
-        const g = genre.toLowerCase();
-        const localMatches = MOVIES.filter((m) =>
-          m.genres.some((item) => item.toLowerCase() === g)
-        );
-        const combined = page === 1 ? [...localMatches, ...live] : live;
-        const seen = new Set();
-        return combined.filter((m: MovieBase) => {
-          const key = m.title.toLowerCase();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        }).slice(0, limit);
+          })
+          .slice(0, limit);
       }
     }
   } catch (err) {
@@ -114,13 +164,13 @@ export async function getMoviesByGenre(genre: string, page = 1, limit = 24): Pro
   }
 
   // Local fallback
-  if (isAll) {
-    return MOVIES.slice(skip, skip + limit);
+  let fallbackList = isAll
+    ? MOVIES
+    : MOVIES.filter((m) => m.genres.some((item) => item.toLowerCase() === genre.toLowerCase()));
+  if (hasYear) {
+    fallbackList = fallbackList.filter((m) => matchesYear(m.release_date, year!));
   }
-  const g = genre.toLowerCase();
-  return MOVIES.filter((m) =>
-    m.genres.some((item) => item.toLowerCase() === g)
-  ).slice(skip, skip + limit);
+  return fallbackList.slice(skip, skip + limit);
 }
 
 export async function getMovieById(id: string | number): Promise<MovieFull | null> {

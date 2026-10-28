@@ -19,7 +19,7 @@ interface MoviePageProps {
 
 export async function generateMetadata({ params }: MoviePageProps) {
   const { id } = await params;
-  const movie = await getMovieById(Number(id));
+  const movie = await getMovieById(id);
   if (!movie) return { title: "Movie Not Found — Tanuki" };
 
   return {
@@ -30,15 +30,15 @@ export async function generateMetadata({ params }: MoviePageProps) {
 
 export default async function MovieDetailsPage({ params }: MoviePageProps) {
   const { id } = await params;
-  const movie = await getMovieById(Number(id));
+  const movie = await getMovieById(id);
 
   if (!movie) {
     notFound();
   }
 
   const primaryGenre = movie.genres?.[0] ?? "Action";
-  const relatedMovies = (await getMoviesByGenre(primaryGenre, 7)).filter(
-    (m) => m.id !== movie.id
+  const relatedMovies = (await getMoviesByGenre(primaryGenre, 1, 8)).filter(
+    (m) => String(m.id) !== String(movie.id)
   ).slice(0, 6);
 
   const year = movie.release_date ? movie.release_date.slice(0, 4) : "";

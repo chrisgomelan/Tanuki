@@ -25,8 +25,12 @@ const SERVERS = [
   {
     id: "vidsrc-me",
     name: "VidSrc Stream",
-    getUrl: (id: string | number, imdb: string | null | undefined) =>
-      imdb ? `https://vidsrc.me/embed/movie?imdb=${imdb}` : `https://vidsrc.me/embed/movie?tmdb=${id}`,
+    getUrl: (id: string | number, imdb: string | null | undefined) => {
+      const imdbVal = imdb || (String(id).startsWith("tt") ? String(id) : null);
+      return imdbVal
+        ? `https://vidsrc.me/embed/movie?imdb=${imdbVal}`
+        : `https://vidsrc.me/embed/movie?tmdb=${id}`;
+    },
   },
   {
     id: "autoembed",
@@ -67,8 +71,12 @@ const SERVERS = [
   {
     id: "smashystream",
     name: "SmashyStream",
-    getUrl: (id: string | number, _imdb: string | null | undefined) =>
-      `https://embed.smashystream.com/playere.php?tmdb=${id}`,
+    getUrl: (id: string | number, imdb: string | null | undefined) => {
+      const imdbVal = imdb || (String(id).startsWith("tt") ? String(id) : null);
+      return imdbVal
+        ? `https://embed.smashystream.com/playere.php?imdb=${imdbVal}`
+        : `https://embed.smashystream.com/playere.php?tmdb=${id}`;
+    },
   },
 ];
 

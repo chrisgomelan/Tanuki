@@ -184,12 +184,12 @@ export default function LiveSearch({
       {isOpen && query.trim().length >= 2 && (
         <div
           role="listbox"
-          className={`absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl bg-[#141520]/95 backdrop-blur-xl ring-1 ring-white/15 shadow-2xl shadow-black/80 animate-in fade-in zoom-in-95 duration-150 ${
+          className={`absolute left-0 right-0 z-50 mt-2 flex flex-col overflow-hidden rounded-2xl bg-[#141520]/95 backdrop-blur-xl ring-1 ring-white/15 shadow-2xl shadow-black/80 animate-in fade-in zoom-in-95 duration-150 ${
             isMobile ? "w-full max-h-[55vh]" : "min-w-[320px] max-w-[380px] max-h-80"
           }`}
         >
           {results.length > 0 ? (
-            <div className="overflow-y-auto divide-y divide-white/5 py-1 scrollbar-thin touch-scroll">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain divide-y divide-white/5 py-1 scrollbar-thin touch-scroll">
               <div className="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400/80">
                 Live Movie Matches
               </div>

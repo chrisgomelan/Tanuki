@@ -188,10 +188,43 @@ export default function LiveSearch({
             isMobile ? "w-full max-h-[55vh]" : "min-w-[320px] max-w-[380px] max-h-80"
           }`}
         >
-          {results.length > 0 ? (
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain divide-y divide-white/5 py-1 scrollbar-thin touch-scroll">
-              <div className="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400/80">
-                Live Movie Matches
+          {isLoading && results.length === 0 ? (
+            <div className="divide-y divide-white/5 py-1">
+              <div className="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400/60">
+                Searching...
+              </div>
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 px-3.5 py-2.5 sm:py-2 animate-pulse"
+                >
+                  {/* Poster skeleton */}
+                  <div className="h-12 w-9 flex-shrink-0 rounded-md bg-white/10 ring-1 ring-white/5" />
+
+                  {/* Title & metadata skeleton */}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-3 w-3/4 rounded bg-white/10" />
+                    <div className="h-2.5 w-1/2 rounded bg-white/5" />
+                  </div>
+
+                  {/* Rating badge placeholder */}
+                  <div className="h-4 w-9 rounded-full bg-white/5 shrink-0" />
+                </div>
+              ))}
+            </div>
+          ) : results.length > 0 ? (
+            <div
+              className={`min-h-0 flex-1 overflow-y-auto overscroll-y-contain divide-y divide-white/5 py-1 scrollbar-thin touch-scroll transition-opacity duration-150 ${
+                isLoading ? "opacity-60" : "opacity-100"
+              }`}
+            >
+              <div className="flex items-center justify-between px-3.5 py-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400/80">
+                  Live Movie Matches
+                </span>
+                {isLoading && (
+                  <span className="text-[10px] text-white/40 animate-pulse">Updating...</span>
+                )}
               </div>
               {results.map((movie) => {
                 const year = movie.release_date?.slice(0, 4);

@@ -15,6 +15,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Tanuki — Free Movie Streaming & Tracking",
   description: "Watch free movies with zero ads, multiple high-speed streaming servers, and instant timestamp savepoints. No account required.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icon.svg",
+  },
 };
 
 export const viewport: Viewport = {
